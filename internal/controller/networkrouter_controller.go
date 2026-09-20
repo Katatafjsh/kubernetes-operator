@@ -382,10 +382,14 @@ func (r *NetworkRouterReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			if err != nil {
 				return ctrl.Result{}, err
 			}
-			err = json.Unmarshal(mergedJSON, &podTemplateSpecAC)
+			// Unmarshal into a fresh builder, not podTemplateSpecAC: Go merges a JSON
+			// array into a non-empty slice by index, leaving stale value/valueFrom.
+			mergedPT := &corev1ac.PodTemplateSpecApplyConfiguration{}
+			err = json.Unmarshal(mergedJSON, mergedPT)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
+			podTemplateSpecAC = mergedPT
 		}
 	}
 	maps.Copy(workloadLabels, selectorLabels)
